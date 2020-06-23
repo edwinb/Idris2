@@ -1,6 +1,7 @@
 module Data.List.Elem
 
 import Decidable.Equality
+import Data.List
 
 --------------------------------------------------------------------------------
 -- List membership proof
@@ -74,3 +75,19 @@ indexElem : Nat -> (xs : List a) -> Maybe (x ** Elem x xs)
 indexElem  _    []        = Nothing
 indexElem  Z    (y :: ys) = Just (y ** Here)
 indexElem (S n) (y :: ys) = map (\(x ** p) => (x ** There p)) (indexElem n ys)
+
+||| Proof that an element is still inside a list if we append to it.
+total
+elemAppLeft : (ys : List a) -> (prf : Elem x xs) -> Elem x (xs ++ ys)
+elemAppLeft {xs} [] prf = 
+  rewrite appendNilRightNeutral xs in prf
+elemAppLeft _ Here = Here
+elemAppLeft ys (There prf) = There $ elemAppLeft ys prf
+
+||| Proof that an element is still inside a list if we prepend to it.
+total
+elemAppRight : {xs : List a} -> (ys : List a) -> (prf : Elem x xs) -> Elem x (ys ++ xs)
+elemAppRight [] prf = prf
+elemAppRight {xs = []} ys prf = absurd prf
+elemAppRight {xs = (x::xs)} [] prf = prf
+elemAppRight {xs = (x::xs)} (y :: ys) prf = There $ elemAppRight ys prf
